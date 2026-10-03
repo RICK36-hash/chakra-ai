@@ -299,13 +299,53 @@ body.bg-mandala .mandala-bg {
 .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--bg-elevated); }
 
 .composer-box {
-  width: 100%; max-width: 800px; background: var(--bg-surface); border-radius: 24px;
-  border: 1px solid var(--border); display: flex; align-items: flex-end; padding: 12px 16px;
-  position: relative; box-shadow: var(--glass-shadow); transition: border-color var(--t-fast);
+  width: 100%; max-width: 800px;
+  background: rgba(22, 22, 34, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex; align-items: flex-end; padding: 12px 18px;
+  position: relative;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  transition: all var(--t-med) var(--ease-out);
+  animation: rhythmicGlassGlow 6s ease-in-out infinite;
 }
+
+/* Dynamic Rhythmic Luminescence (Prana Breathing) */
+@keyframes rhythmicGlassGlow {
+  0% {
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), 
+                0 0 12px rgba(255, 255, 255, 0.02),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.32);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55), 
+                0 0 26px var(--accent-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), 
+                0 0 12px rgba(255, 255, 255, 0.02),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
+}
+
+.composer-box:hover,
+.composer-box:focus-within {
+  border-color: var(--accent);
+  background: rgba(28, 28, 44, 0.88);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.6), 
+              0 0 32px var(--accent-glow), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
 .composer-box.generating {
   border-color: var(--accent);
-  box-shadow: 0 0 20px var(--accent-glow);
+  box-shadow: 0 0 28px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .composer-ring {
   position: absolute; inset: -1px; border-radius: 25px; pointer-events: none; opacity: 0;
@@ -317,29 +357,65 @@ body.bg-mandala .mandala-bg {
 .generating .composer-ring { opacity: 1; }
 
 .composer-box textarea {
-  flex: 1; background: transparent; border: none; color: var(--text-primary); font-size: 1rem;
-  resize: none; max-height: 200px; outline: none; padding: 6px 0; line-height: 1.5;
+  flex: 1; background: transparent; border: none; color: var(--text-primary);
+  font-size: 1.05rem; font-weight: 400;
+  resize: none; max-height: 200px; outline: none; padding: 6px 4px; line-height: 1.55;
+  caret-color: var(--accent);
 }
-.composer-actions { display: flex; align-items: center; gap: 8px; margin-left: 12px; margin-bottom: 2px; }
+.composer-box textarea::placeholder {
+  color: rgba(236, 235, 245, 0.48);
+  font-size: 0.98rem;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  transition: opacity var(--t-fast);
+}
+.composer-box textarea:focus::placeholder {
+  opacity: 0.7;
+}
+
+.composer-actions { display: flex; align-items: center; gap: 10px; margin-left: 14px; margin-bottom: 2px; }
 .mic-btn {
   position: relative;
-  width: 36px; height: 36px; border-radius: 50%;
-  background: transparent; border: none;
-  color: var(--text-muted);
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all var(--t-fast);
   flex-shrink: 0;
 }
-.mic-btn:hover { color: var(--text-primary); background: var(--bg-elevated); }
-.mic-btn svg { width: 18px; height: 18px; }
-.mic-btn.recording { color: #E5383B; }
+.mic-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+.mic-btn svg { width: 19px; height: 19px; }
+.mic-btn.recording { color: #E5383B; border-color: #E5383B; background: rgba(229, 56, 59, 0.15); }
 .mic-ripples { position: absolute; inset: -6px; border-radius: 50%; pointer-events: none; }
-.send-btn { background: var(--accent); color: var(--bg-void); border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.send-btn:disabled { background: var(--bg-elevated); color: var(--text-muted); cursor: not-allowed; }
+.send-btn {
+  background: var(--accent); color: var(--bg-void); border: none;
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; cursor: pointer;
+  box-shadow: 0 4px 16px var(--accent-glow);
+  transition: all var(--t-fast);
+}
+.send-btn:hover:not(:disabled) {
+  transform: scale(1.08);
+  box-shadow: 0 6px 22px var(--accent-glow);
+}
+.send-btn:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
 .send-btn svg { width: 18px; height: 18px; }
 .generating .send-icon { display: none; }
 .generating .stop-icon { display: block; }
-.disclaimer { text-align: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; }
+.disclaimer { text-align: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 14px; opacity: 0.7; }
 
 /* Cyber Status Pill */
 .cyber-status-pill {
