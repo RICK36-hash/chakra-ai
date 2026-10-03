@@ -1,0 +1,13 @@
+{
+  "name": "chakra-ai",
+  "version": "1.0.0",
+  "description": "Gemini-powered AI chatbot with conversation memory",
+  "private": true,
+  "scripts": {
+    "dev": "npx vercel dev",
+    "deploy": "npx vercel --prod"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  }
+}
