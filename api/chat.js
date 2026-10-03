@@ -1,7 +1,12 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const FALLBACK_MODELS = ["gemini-3.8-flash", "gemini-2.0-flash-lite"];
+const FALLBACK_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.5-flash",
+  "gemini-flash-lite-latest",
+  "gemini-3.1-flash-lite"
+];
 
 async function tryWithRetry(message, history, maxRetries = 2, config = {}) {
   const { requestedModel, temperature, systemInstruction } = config;
@@ -33,8 +38,15 @@ async function tryWithRetry(message, history, maxRetries = 2, config = {}) {
         return result.response.text();
       } catch (error) {
         const status = error.status || error.httpStatusCode;
-        console.warn(`Model ${modelName} attempt ${attempt + 1} failed: ${status} - ${error.message?.substring(0, 100)}`);
+        const msg = error.message || "";
+        console.warn(`Model ${modelName} attempt ${attempt + 1} failed: ${status} - ${msg.substring(0, 100)}`);
 
+        // If daily quota is exceeded for this model, don't wait to retry it — jump straight to next fallback
+        if (msg.includes("Quota exceeded") || msg.includes("quota")) {
+          break;
+        }
+
+        // Retry on 503 or transient 429
         if ((status === 503 || status === 429) && attempt < maxRetries) {
           const delay = Math.pow(2, attempt) * 1000;
           await new Promise((resolve) => setTimeout(resolve, delay));
