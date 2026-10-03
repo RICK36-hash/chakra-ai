@@ -1,39 +1,36 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="ratri" data-accent="sahasrara">
+<html lang="en" data-theme="ratri" data-accent="sahasrara" data-anim="tandava">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CHAKRA AI</title>
   
-  <!-- Favicon (SVG) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23A06BFF' stroke-width='4'/><path d='M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18' stroke='%23A06BFF' stroke-width='2'/><circle cx='50' cy='50' r='6' fill='%23A06BFF'/></svg>" />
-
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500;600&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet" />
   
-  <!-- Dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github-dark.min.css" id="hljs-theme" />
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11/highlight.min.js"></script>
-
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body class="bg-mandala">
 
-  <!-- Background Layer -->
+  <!-- Ambient Canvas Layers -->
+  <canvas id="bgCanvas" class="ambient-canvas"></canvas>
   <div class="bg-layer mandala-bg" id="bgLayer"></div>
   <div class="accent-glow-bg"></div>
+  <canvas id="fgCanvas" class="ambient-canvas fg"></canvas>
 
   <!-- INTRO SCREEN -->
   <div id="introScreen" class="intro-overlay">
-    <div class="intro-particles" id="introParticles"></div>
     <div class="intro-watermark">चक्र</div>
     
     <div class="intro-center">
       <div class="chakra-wrapper" id="introChakraWrapper">
-        <svg class="chakra-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <svg class="chakra-svg intro-yantra" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <circle class="c-ring" cx="50" cy="50" r="45" />
           <g class="c-spokes">
             <!-- 24 Spokes -->
@@ -46,30 +43,21 @@
           </g>
           <path class="c-lotus" d="M50 20 C60 20 60 40 50 50 C40 40 40 20 50 20 Z M50 80 C60 80 60 60 50 50 C40 60 40 80 50 80 Z M20 50 C20 40 40 40 50 50 C40 60 20 60 20 50 Z M80 50 C80 40 60 40 50 50 C60 60 80 60 80 50 Z M28 28 C38 20 45 35 50 50 C35 45 20 38 28 28 Z M72 72 C62 80 55 65 50 50 C65 55 80 62 72 72 Z M28 72 C20 62 35 55 50 50 C45 65 38 80 28 72 Z M72 28 C80 38 65 45 50 50 C55 35 62 20 72 28 Z" />
           <circle class="c-bindu" cx="50" cy="50" r="4" />
-          <!-- 7 Energy Nodes -->
-          <circle class="node n1" cx="50" cy="5" r="2.5" />
-          <circle class="node n2" cx="85.3" cy="22.5" r="2.5" />
-          <circle class="node n3" cx="93.7" cy="61.1" r="2.5" />
-          <circle class="node n4" cx="69.7" cy="90.5" r="2.5" />
-          <circle class="node n5" cx="30.3" cy="90.5" r="2.5" />
-          <circle class="node n6" cx="6.3" cy="61.1" r="2.5" />
-          <circle class="node n7" cx="14.7" cy="22.5" r="2.5" />
         </svg>
-        <div class="chakra-bloom"></div>
+        <div class="chakra-bloom" id="introBloom"></div>
       </div>
       
       <div class="intro-text" id="introText">
-        <h1 class="intro-title">Ready to enter?</h1>
+        <h1 class="intro-title">Ready to enter?<span class="intro-caret"></span></h1>
         <p class="intro-subtitle">क्या आप प्रवेश के लिए तैयार हैं?</p>
-        <button class="pill-btn" id="enterBtn">Enter &middot; प्रवेश</button>
+        <button class="pill-btn magnetic" id="enterBtn">Enter &middot; प्रवेश</button>
         <div class="intro-hint">Press Enter or Space</div>
       </div>
+      
+      <div class="intro-boot-text" id="introBootText"></div>
     </div>
     
     <div class="intro-footer">
-      <button class="icon-btn" id="soundToggle" title="Toggle Sound">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-      </button>
       <button class="text-link" id="skipIntroBtn">Skip</button>
     </div>
   </div>
@@ -81,14 +69,14 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="logo-area" id="logoArea">
-          <svg class="mini-chakra" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg>
+          <svg class="mini-chakra logo-spin" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg>
           <span class="wordmark">CHAKRA</span>
         </div>
         <button class="icon-btn hide-desktop" id="closeSidebarMobile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
 
       <div class="sidebar-actions">
-        <button class="primary-btn new-chat-btn" id="newChatBtn">
+        <button class="primary-btn new-chat-btn magnetic" id="newChatBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span>New Chat</span>
           <kbd class="shortcut-hint">⌘N</kbd>
@@ -99,16 +87,14 @@
         </div>
       </div>
 
-      <div class="sidebar-scroll" id="conversationList">
-        <!-- Grouped chats rendered by JS -->
-      </div>
+      <div class="sidebar-scroll" id="conversationList"></div>
 
       <div class="sidebar-footer">
-        <button class="nav-item" id="openSettingsBtn">
+        <button class="nav-item magnetic" id="openSettingsBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           Settings
         </button>
-        <button class="nav-item text-danger" id="clearAllBtn">
+        <button class="nav-item text-danger magnetic" id="clearAllBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
           Clear History
         </button>
@@ -129,59 +115,54 @@
         <!-- Welcome State -->
         <div class="welcome-container" id="welcomeScreen">
           <div class="welcome-logo">
-            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="2"/><circle cx="50" cy="50" r="6" fill="currentColor"/></svg>
+            <svg class="slow-spin" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="2"/><circle cx="50" cy="50" r="6" fill="currentColor"/></svg>
           </div>
-          <h1 class="greeting-time" id="greetingText">Welcome to CHAKRA AI</h1>
-          <p class="greeting-sub" id="greetingSub">Powered by Google Gemini. Ask me anything.</p>
+          <h1 class="greeting-time" id="greetingText">Welcome to CHAKRA</h1>
+          <p class="greeting-sub" id="greetingSub">Powered by Google Gemini.</p>
           
           <div class="suggestions-grid">
-            <div class="suggestion-card" data-prompt="Explain how UPI (Unified Payments Interface) works technically.">
-              <span class="s-icon">🌐</span>
-              <div class="s-text">
-                <strong>Learn</strong>
-                <span>Explain how UPI works</span>
-              </div>
+            <div class="suggestion-card magnetic" data-prompt="Explain how UPI (Unified Payments Interface) works technically.">
+              <span class="s-icon">🌐</span><div class="s-text"><strong>Learn</strong><span>Explain how UPI works</span></div>
             </div>
-            <div class="suggestion-card" data-prompt="Write a Python script to scrape a simple website and save to CSV.">
-              <span class="s-icon">⌨️</span>
-              <div class="s-text">
-                <strong>Build</strong>
-                <span>Write a Python scraper</span>
-              </div>
+            <div class="suggestion-card magnetic" data-prompt="Write a Python script to scrape a simple website and save to CSV.">
+              <span class="s-icon">⌨️</span><div class="s-text"><strong>Build</strong><span>Write a Python scraper</span></div>
             </div>
-            <div class="suggestion-card" data-prompt="Tell me an engaging short story inspired by the Panchatantra.">
-              <span class="s-icon">📖</span>
-              <div class="s-text">
-                <strong>Create</strong>
-                <span>Panchatantra story</span>
-              </div>
+            <div class="suggestion-card magnetic" data-prompt="Tell me an engaging short story inspired by the Panchatantra.">
+              <span class="s-icon">📖</span><div class="s-text"><strong>Create</strong><span>Panchatantra story</span></div>
             </div>
-            <div class="suggestion-card" data-prompt="Plan a 5-day cultural itinerary for a trip to Rajasthan, India.">
-              <span class="s-icon">🗺️</span>
-              <div class="s-text">
-                <strong>Explore</strong>
-                <span>5-day Rajasthan trip</span>
-              </div>
+            <div class="suggestion-card magnetic" data-prompt="Plan a 5-day cultural itinerary for a trip to Rajasthan, India.">
+              <span class="s-icon">🗺️</span><div class="s-text"><strong>Explore</strong><span>5-day Rajasthan trip</span></div>
             </div>
           </div>
         </div>
-
       </div>
 
-      <button class="scroll-to-bottom hidden" id="scrollToBottomBtn">
+      <button class="scroll-to-bottom hidden magnetic" id="scrollToBottomBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
 
       <!-- Composer -->
       <div class="composer-container">
-        <div class="composer-box">
-          <div class="composer-ring"></div>
-          <textarea id="messageInput" rows="1" placeholder="Message CHAKRA..."></textarea>
+        <!-- Compact Kundalini for Mobile -->
+        <div class="mobile-kundalini" id="mobileKundalini">
+          <div class="m-node n1"></div><div class="m-node n2"></div><div class="m-node n3"></div><div class="m-node n4"></div>
+          <div class="m-node n5"></div><div class="m-node n6"></div><div class="m-node n7"></div>
+        </div>
+
+        <div class="chips-row" id="chipsRow">
+          <button class="chip magnetic" data-prompt="Summarize this">Summarize</button>
+          <button class="chip magnetic" data-prompt="Fix the grammar">Fix Grammar</button>
+          <button class="chip magnetic" data-prompt="Explain like I'm 5">Explain simple</button>
+        </div>
+        <div class="composer-box" id="composerBox">
+          <div class="composer-ring" id="composerRing"></div>
+          <textarea id="messageInput" rows="1" placeholder=""></textarea>
           <div class="composer-actions">
             <button class="icon-btn mic-btn" id="micBtn" title="Voice Input">
+              <div class="mic-ripples"></div>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
-            <button class="send-btn" id="sendBtn" disabled>
+            <button class="send-btn magnetic" id="sendBtn" disabled>
               <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
               <svg class="stop-icon hidden" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"></rect></svg>
             </button>
@@ -190,6 +171,80 @@
         <div class="disclaimer">CHAKRA can make mistakes. Verify important information.</div>
       </div>
     </main>
+
+    <!-- CORE PANEL (HUD) -->
+    <aside class="core-panel" id="corePanel">
+      <button class="core-toggle" id="coreToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+      <div class="core-content">
+        
+        <div class="core-yantra-box">
+          <div class="yantra-brackets"></div>
+          <svg class="hud-yantra" viewBox="0 0 100 100">
+            <!-- Rings -->
+            <circle class="r-out" cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4"/>
+            <circle class="r-mid" cx="50" cy="50" r="32" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+            <circle class="r-in" cx="50" cy="50" r="18" fill="none" stroke="currentColor" stroke-width="0.5" stroke-dasharray="1 2"/>
+            <!-- Inner Geometry -->
+            <g class="h-spokes">
+              <line x1="50" y1="5" x2="50" y2="95" stroke="currentColor" stroke-width="0.5" opacity="0.5"/>
+              <line x1="5" y1="50" x2="95" y2="50" stroke="currentColor" stroke-width="0.5" opacity="0.5"/>
+              <line x1="18.1" y1="18.1" x2="81.9" y2="81.9" stroke="currentColor" stroke-width="0.5" opacity="0.5"/>
+              <line x1="18.1" y1="81.9" x2="81.9" y2="18.1" stroke="currentColor" stroke-width="0.5" opacity="0.5"/>
+            </g>
+            <circle class="h-bindu" cx="50" cy="50" r="3" fill="var(--accent)" />
+          </svg>
+          <div class="hud-status" id="hudStatus">IDLE</div>
+        </div>
+
+        <div class="core-telemetry">
+          <div class="telemetry-item">
+            <div class="t-labels"><span>Vega</span><span class="sanskrit">वेग</span></div>
+            <div class="t-val"><span id="tel-vega">0</span><small>ms</small></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="t-labels"><span>Pravah</span><span class="sanskrit">प्रवाह</span></div>
+            <div class="t-val"><span id="tel-pravah">0.0</span><small>t/s</small></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="t-labels"><span>Avartan</span><span class="sanskrit">आवर्तन</span></div>
+            <div class="t-val"><span id="tel-avartan">0</span><small>cyc</small></div>
+          </div>
+          <div class="telemetry-item full">
+            <div class="t-labels"><span>Yantra</span><span class="sanskrit">यंत्र</span></div>
+            <div class="t-val engine" id="tel-yantra">Gemini Auto</div>
+          </div>
+        </div>
+
+        <div class="core-spine">
+          <div class="spine-line">
+            <div class="spine-fill" id="spineFill"></div>
+            <div class="spine-orb" id="spineOrb"></div>
+            <!-- 7 Nodes -->
+            <div class="s-node n7" style="top:0%"></div>
+            <div class="s-node n6" style="top:16.6%"></div>
+            <div class="s-node n5" style="top:33.3%"></div>
+            <div class="s-node n4" style="top:50%"></div>
+            <div class="s-node n3" style="top:66.6%"></div>
+            <div class="s-node n2" style="top:83.3%"></div>
+            <div class="s-node n1" style="top:100%"></div>
+          </div>
+          <div class="spine-labels">
+            <span class="sl l7">Sahasrara</span>
+            <span class="sl l6">Ajna</span>
+            <span class="sl l5">Vishuddha</span>
+            <span class="sl l4">Anahata</span>
+            <span class="sl l3">Manipura</span>
+            <span class="sl l2">Svadhisthana</span>
+            <span class="sl l1">Muladhara</span>
+          </div>
+        </div>
+
+        <div class="core-wave" id="hudWave">
+          <!-- Bars generated by JS -->
+        </div>
+
+      </div>
+    </aside>
 
   </div>
 
@@ -215,14 +270,14 @@
           <div class="setting-item col">
             <span>Chakra Accent</span>
             <div class="accent-picker" id="accentPicker">
-              <button class="accent-swatch" data-acc="muladhara" style="background:#E5383B" title="Root - Grounded"></button>
-              <button class="accent-swatch" data-acc="svadhisthana" style="background:#FF7A1A" title="Sacral - Creative"></button>
-              <button class="accent-swatch" data-acc="manipura" style="background:#FFC21A" title="Solar - Powerful"></button>
-              <button class="accent-swatch" data-acc="anahata" style="background:#2ECC71" title="Heart - Balanced"></button>
-              <button class="accent-swatch" data-acc="vishuddha" style="background:#28B5F5" title="Throat - Expressive"></button>
-              <button class="accent-swatch" data-acc="ajna" style="background:#5B5BFF" title="Third Eye - Insightful"></button>
-              <button class="accent-swatch active" data-acc="sahasrara" style="background:#A06BFF" title="Crown - Boundless"></button>
-              <button class="accent-swatch" data-acc="swarna" style="background:#F5C26B" title="Swarna - Gold"></button>
+              <button class="accent-swatch" data-acc="muladhara" style="background:#E5383B"></button>
+              <button class="accent-swatch" data-acc="svadhisthana" style="background:#FF7A1A"></button>
+              <button class="accent-swatch" data-acc="manipura" style="background:#FFC21A"></button>
+              <button class="accent-swatch" data-acc="anahata" style="background:#2ECC71"></button>
+              <button class="accent-swatch" data-acc="vishuddha" style="background:#28B5F5"></button>
+              <button class="accent-swatch" data-acc="ajna" style="background:#5B5BFF"></button>
+              <button class="accent-swatch active" data-acc="sahasrara" style="background:#A06BFF"></button>
+              <button class="accent-swatch" data-acc="swarna" style="background:#F5C26B"></button>
             </div>
           </div>
           <label class="setting-item">
@@ -239,6 +294,34 @@
               <option value="inter">Inter (Modern)</option>
               <option value="rajdhani">Rajdhani (Tech)</option>
             </select>
+          </label>
+        </section>
+
+        <section class="settings-group">
+          <h3>Motion & Audio</h3>
+          <label class="setting-item">
+            <span>Animation Intensity</span>
+            <select id="setting-anim">
+              <option value="tandava">Tandava (Full)</option>
+              <option value="lasya">Lasya (Graceful)</option>
+              <option value="shanti">Shanti (Calm)</option>
+              <option value="off">Off (Reduced Motion)</option>
+            </select>
+          </label>
+          <label class="setting-item toggle">
+            <span>Cosmic Sounds (Swaras)</span>
+            <input type="checkbox" id="setting-sound" />
+            <span class="slider"></span>
+          </label>
+          <label class="setting-item toggle">
+            <span>Dhyana (Idle Mode)</span>
+            <input type="checkbox" id="setting-dhyana" checked />
+            <span class="slider"></span>
+          </label>
+          <label class="setting-item toggle">
+            <span>Sanskrit Labels</span>
+            <input type="checkbox" id="setting-sanskrit" checked />
+            <span class="slider"></span>
           </label>
         </section>
 
@@ -274,29 +357,6 @@
         </section>
 
         <section class="settings-group">
-          <h3>Motion & Audio</h3>
-          <label class="setting-item">
-            <span>Intro Sequence</span>
-            <select id="setting-intro">
-              <option value="always">Every Visit</option>
-              <option value="session">Once Per Session</option>
-              <option value="never">Never</option>
-            </select>
-          </label>
-          <label class="setting-item toggle">
-            <span>Reduced Motion</span>
-            <input type="checkbox" id="setting-reduced-motion" />
-            <span class="slider"></span>
-          </label>
-          <label class="setting-item toggle">
-            <span>UI Sounds</span>
-            <input type="checkbox" id="setting-sound" />
-            <span class="slider"></span>
-          </label>
-        </section>
-
-        <section class="settings-group">
-          <h3>Data & Privacy</h3>
           <button class="outline-btn full" id="exportChatsBtn">Export Chats (JSON)</button>
         </section>
         
@@ -315,9 +375,7 @@
     </div>
   </div>
 
-  <!-- TOASTS -->
   <div class="toast-container" id="toastContainer"></div>
-
   <script src="/script.js"></script>
 </body>
 </html>
