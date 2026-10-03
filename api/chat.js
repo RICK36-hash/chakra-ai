@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const FALLBACK_MODELS = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash-lite"];
+const FALLBACK_MODELS = ["gemini-3.8-flash", "gemini-2.0-flash-lite"];
 
 async function tryWithRetry(message, history, maxRetries = 2, config = {}) {
   const { requestedModel, temperature, systemInstruction } = config;
@@ -41,8 +41,8 @@ async function tryWithRetry(message, history, maxRetries = 2, config = {}) {
           continue;
         }
 
-        if (status === 401 || status === 400 || status === 404) throw error;
-        break; // Exhausted retries for this model, move to next fallback
+        if (status === 401 || status === 400) throw error;
+        break; // Exhausted retries or 404 (model not found), move to next fallback
       }
     }
   }
