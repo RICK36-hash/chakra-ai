@@ -17,7 +17,16 @@ const sidebar = document.getElementById("sidebar");
 // ===== Initialize =====
 document.addEventListener("DOMContentLoaded", () => {
   loadConversations();
+  cleanupEmptyConversations();
+  
+  // Set the most recent conversation as active on load
+  const keys = Object.keys(conversations);
+  if (keys.length > 0) {
+    activeConversationId = keys[keys.length - 1]; // latest
+  }
+
   renderConversationList();
+  renderChat();
   setupEventListeners();
   configureMarked();
 });
@@ -139,14 +148,26 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
 }
 
+function cleanupEmptyConversations() {
+  let modified = false;
+  for (const id in conversations) {
+    if (conversations[id].messages.length === 0) {
+      delete conversations[id];
+      modified = true;
+    }
+  }
+  if (modified) {
+    saveConversations();
+    // If the active conversation was deleted because it was empty, reset it
+    if (activeConversationId && !conversations[activeConversationId]) {
+      activeConversationId = null;
+    }
+  }
+}
+
 function createNewConversation() {
-  const id = generateId();
-  conversations[id] = {
-    title: "New Chat",
-    messages: [],
-  };
-  activeConversationId = id;
-  saveConversations();
+  cleanupEmptyConversations();
+  activeConversationId = null;
   renderConversationList();
   renderChat();
   messageInput.focus();
@@ -154,6 +175,7 @@ function createNewConversation() {
 }
 
 function switchConversation(id) {
+  cleanupEmptyConversations();
   activeConversationId = id;
   renderConversationList();
   renderChat();
@@ -204,17 +226,19 @@ function renderChat() {
   const existingMessages = chatMessages.querySelectorAll(".message-row");
   existingMessages.forEach((el) => el.remove());
 
-  if (!activeConversationId || !conversations[activeConversationId]) {
+  const conv = activeConversationId ? conversations[activeConversationId] : null;
+
+  if (!conv || conv.messages.length === 0) {
     welcomeScreen.style.display = "flex";
-    return;
+  } else {
+    welcomeScreen.style.display = "none";
   }
 
-  welcomeScreen.style.display = "none";
-  const conv = conversations[activeConversationId];
-
-  conv.messages.forEach((msg) => {
-    appendMessageToDOM(msg.role === "user" ? "user" : "bot", msg.parts[0].text, false);
-  });
+  if (conv) {
+    conv.messages.forEach((msg) => {
+      appendMessageToDOM(msg.role === "user" ? "user" : "bot", msg.parts[0].text, false);
+    });
+  }
 
   scrollToBottom();
 }
@@ -316,7 +340,11 @@ async function handleSendMessage() {
 
   // Create a new conversation if none is active
   if (!activeConversationId) {
-    createNewConversation();
+    activeConversationId = generateId();
+    conversations[activeConversationId] = {
+      title: "New Chat",
+      messages: [],
+    };
   }
 
   const conv = conversations[activeConversationId];
