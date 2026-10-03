@@ -8,7 +8,7 @@ let settings = {
   accent: "sahasrara",
   bg: "mandala",
   font: "inter",
-  model: "auto",
+  model: "gemini-3.8-flash",
   temp: 0.7,
   persona: "default",
   enterToSend: true,
@@ -81,6 +81,7 @@ function loadSettings() {
   try {
     const saved = localStorage.getItem("chakra_settings");
     if (saved) settings = { ...settings, ...JSON.parse(saved) };
+    if (settings.model === "auto") settings.model = "gemini-3.8-flash"; // Migrate legacy auto
   } catch (e) { console.warn("Failed to load settings"); }
   
   // Sync UI to loaded settings
