@@ -173,35 +173,47 @@ const CanvasSys = {
       });
     }
 
-    // Diya sparks
-    const maxSparks = window.innerWidth > 768 ? 60 : 25;
-    if (Math.random() < 0.12 && this.sparks.length < maxSparks && settings.anim !== 'shanti') {
+    // Diya sparks & Warp Speed Streaks
+    const maxSparks = window.innerWidth > 768 ? (isGenerating ? 100 : 60) : 30;
+    if (Math.random() < (isGenerating ? 0.4 : 0.12) && this.sparks.length < maxSparks && settings.anim !== 'shanti') {
       this.sparks.push({
         x: Math.random() * this.fg.width,
-        y: this.fg.height + 10,
+        y: this.fg.height + 15,
         r: Math.random() * 2 + 0.6,
-        speed: Math.random() * 0.8 + 0.4,
+        speed: Math.random() * 0.8 + 0.5,
         wobble: Math.random() * Math.PI * 2,
-        alpha: Math.random() * 0.4 + 0.4
+        alpha: Math.random() * 0.5 + 0.5
       });
     }
     for (let i = this.sparks.length - 1; i >= 0; i--) {
       let s = this.sparks[i];
-      s.y -= s.speed;
-      s.x += Math.sin(s.wobble) * 0.4;
-      s.wobble += 0.02;
-      s.alpha -= 0.002;
-      if (s.alpha <= 0 || s.y < 0) { this.sparks.splice(i, 1); continue; }
-      this.ctxFg.fillStyle = `rgba(245, 194, 107, ${s.alpha})`;
-      this.ctxFg.beginPath();
-      this.ctxFg.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      this.ctxFg.fill();
+      const speedMult = isGenerating ? 7 : 1;
+      s.y -= s.speed * speedMult;
+      s.x += Math.sin(s.wobble) * (isGenerating ? 0.8 : 0.4);
+      s.wobble += 0.03;
+      s.alpha -= (isGenerating ? 0.008 : 0.002);
+      if (s.alpha <= 0 || s.y < -20) { this.sparks.splice(i, 1); continue; }
+      
+      if (isGenerating) {
+        // Hyperspace neon laser streak
+        this.ctxFg.strokeStyle = `rgba(160, 107, 255, ${s.alpha * 0.85})`;
+        this.ctxFg.lineWidth = s.r * 1.4;
+        this.ctxFg.beginPath();
+        this.ctxFg.moveTo(s.x, s.y);
+        this.ctxFg.lineTo(s.x, s.y + s.speed * 20);
+        this.ctxFg.stroke();
+      } else {
+        this.ctxFg.fillStyle = `rgba(245, 194, 107, ${s.alpha})`;
+        this.ctxFg.beginPath();
+        this.ctxFg.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        this.ctxFg.fill();
+      }
     }
 
     // Cursor Aura
-    const auraRad = 70;
+    const auraRad = isGenerating ? 100 : 70;
     const auraGrad = this.ctxFg.createRadialGradient(this.mouseX, this.mouseY, 0, this.mouseX, this.mouseY, auraRad);
-    auraGrad.addColorStop(0, 'rgba(255, 255, 255, 0.04)');
+    auraGrad.addColorStop(0, isGenerating ? 'rgba(160, 107, 255, 0.08)' : 'rgba(255, 255, 255, 0.04)');
     auraGrad.addColorStop(1, 'rgba(0,0,0,0)');
     this.ctxFg.fillStyle = auraGrad;
     this.ctxFg.beginPath();
@@ -280,63 +292,9 @@ function skipIntro() {
   safeGsap.from('#welcomeScreen', { y: 30, opacity: 0, duration: 0.6, ease: "power2.out", delay: 0.1 });
   safeGsap.from('.suggestion-card', { y: 20, opacity: 0, duration: 0.4, stagger: 0.08, ease: "back.out", delay: 0.2 });
   safeGsap.from('.composer-container', { y: 50, opacity: 0, duration: 0.6, ease: "power2.out", delay: 0.2 });
-  if (window.innerWidth >= 1280) safeGsap.from('#corePanel', { x: 50, opacity: 0, duration: 0.6, ease: "power2.out", delay: 0.1 });
   
   loadHistory();
 }
-
-// --- KUNDALINI STATE MACHINE ---
-const Kundalini = {
-  state: 0,
-  nodes: null, fill: null, orb: null,
-  init() {
-    this.nodes = document.querySelectorAll('.s-node');
-    this.fill = document.getElementById('spineFill');
-    this.orb = document.getElementById('spineOrb');
-    this.set(0);
-  },
-  set(level) {
-    if (!this.nodes || settings.anim === 'off') return;
-    this.state = level;
-    const heights = [0, 16.6, 33.3, 50, 66.6, 83.3, 100];
-    const h = heights[level] || 0;
-    
-    if (this.fill) safeGsap.to(this.fill, { height: `${h}%`, duration: 0.5, ease: "power2.out" });
-    if (this.orb) safeGsap.to(this.orb, { bottom: `${h}%`, opacity: level > 0 ? 1 : 0, duration: 0.5, ease: "back.out" });
-    
-    this.nodes.forEach((n, i) => {
-      const active = (6 - i) <= level;
-      safeGsap.to(n, { scale: active ? 1.4 : 1, backgroundColor: active ? 'var(--accent)' : 'var(--bg-surface)', duration: 0.3 });
-    });
-    
-    // Play tone for state ascent
-    if (level > 0 && level <= 6) AudioSys.playTone(level - 1, 'triangle', 0.2);
-    
-    // HUD status text
-    const status = document.getElementById('hudStatus');
-    const yantra = document.querySelector('.hud-yantra');
-    if (status) {
-      const states = ["IDLE", "MULA: SENT", "MANI: FETCH", "ANAHATA: CONN", "VISHU: STREAM", "AJNA: LAST", "SAHASRARA"];
-      status.innerText = states[level] || "IDLE";
-      if (level === 4 && yantra) yantra.classList.add('generating-spin');
-      else if (yantra) yantra.classList.remove('generating-spin');
-    }
-  }
-};
-
-// --- TELEMETRY ---
-const Telemetry = {
-  update(vega, pravah, cyc) {
-    const v = document.getElementById('tel-vega');
-    const p = document.getElementById('tel-pravah');
-    const a = document.getElementById('tel-avartan');
-    const y = document.getElementById('tel-yantra');
-    if (v) v.innerText = Math.round(vega);
-    if (p) p.innerText = pravah.toFixed(1);
-    if (a) a.innerText = cyc;
-    if (y) y.innerText = document.getElementById('setting-model')?.selectedOptions[0]?.text || "Gemini";
-  }
-};
 
 // --- CHAT LOGIC ---
 const chatMessages = document.getElementById('chatMessages');
@@ -425,21 +383,37 @@ async function handleSendMessage() {
   scrollToBottom();
   
   isGenerating = true;
+  document.body.classList.add('is-generating');
   const composerBox = document.getElementById('composerBox');
   if (composerBox) composerBox.classList.add('generating');
   if (sendBtn) sendBtn.disabled = false;
   
-  Kundalini.set(1); // Sent
+  AudioSys.playTone(0, 'triangle', 0.2); // Start chime
   
-  const botDiv = appendMessageUI('model', '');
+  const botDiv = appendMessageUI('model', '', true);
   const contentDiv = botDiv.querySelector('.message-content');
   const toolsDiv = botDiv.querySelector('.msg-tools');
+  const avatarDiv = botDiv.querySelector('.message-avatar');
   if (toolsDiv) toolsDiv.style.display = 'none';
+  
+  // Status phrase cycler
+  const phrases = [
+    "⚡ TUNING NEURAL FREQUENCY",
+    "🌀 ACCELERATING CHAKRA VORTEX",
+    "🔮 SYNTHESIZING KNOWLEDGE",
+    "✨ CHANNELING GEMINI INTELLECT",
+    "💫 WEAVING THOUGHT MATRIX"
+  ];
+  let pIdx = 0;
+  const statusEl = contentDiv.querySelector('.status-phrase');
+  const statusInterval = setInterval(() => {
+    if (!isGenerating || !statusEl) { clearInterval(statusInterval); return; }
+    pIdx = (pIdx + 1) % phrases.length;
+    statusEl.innerText = phrases[pIdx];
+  }, 600);
   
   try {
     abortController = new AbortController();
-    const startTime = Date.now();
-    Kundalini.set(2); // Fetch
     
     const apiHistory = chat.history.slice(0, -1).map(m => ({
       role: m.role, parts: [{ text: m.parts[0].text }]
@@ -458,8 +432,7 @@ async function handleSendMessage() {
       signal: abortController.signal
     });
     
-    Kundalini.set(3); // First token
-    const vega = Date.now() - startTime;
+    clearInterval(statusInterval);
     
     if (!response.ok) {
       const err = await response.json();
@@ -467,57 +440,59 @@ async function handleSendMessage() {
     }
     
     const data = await response.json();
-    Kundalini.set(4); // Streaming
     
+    // Switch to streaming words with glowing Bindu Spark
     const words = (data.reply || '').split(' ');
     contentDiv.innerHTML = '';
     
-    const pravah = words.length / (vega / 1000 || 1); 
-    Telemetry.update(vega, pravah, Math.floor(chat.history.length / 2));
+    // Add Bindu spark anchor
+    const binduSpark = document.createElement('span');
+    binduSpark.className = 'bindu-spark';
+    contentDiv.appendChild(binduSpark);
     
     for (let i = 0; i < words.length; i++) {
       if (!isGenerating) break;
       const span = document.createElement('span');
       span.innerHTML = (window.marked ? marked.parseInline(words[i]) : words[i]) + ' ';
       span.className = 'stream-word';
-      contentDiv.appendChild(span);
+      contentDiv.insertBefore(span, binduSpark);
       
       if (settings.anim !== 'off') {
-        safeGsap.to(span, { opacity: 1, filter: 'blur(0px)', y: 0, duration: 0.25, ease: 'power2.out' });
-      } else {
-        span.style.opacity = 1;
-        span.style.filter = 'none';
-        span.style.transform = 'none';
+        safeGsap.from(span, { opacity: 0, filter: 'blur(8px)', scale: 1.1, duration: 0.2, ease: 'power2.out' });
       }
       
       scrollToBottom();
-      await new Promise(r => setTimeout(r, 16));
+      await new Promise(r => setTimeout(r, 14));
     }
     
-    Kundalini.set(5);
-    
+    binduSpark.remove();
     contentDiv.innerHTML = window.marked ? marked.parse(data.reply) : data.reply;
     if (window.hljs) hljs.highlightAll();
+    
+    // Restore steady serene Chakra avatar
+    if (avatarDiv) {
+      avatarDiv.innerHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg>';
+      safeGsap.from(avatarDiv, { scale: 1.3, duration: 0.5, ease: "elastic.out(1, 0.4)" });
+    }
     
     chat.history.push({ role: 'model', parts: [{ text: data.reply }] });
     saveHistory();
     
     if (toolsDiv) toolsDiv.style.display = 'flex';
-    Kundalini.set(6); // Sahasrara Bloom
-    setTimeout(() => Kundalini.set(0), 1000);
+    AudioSys.playTone(6, 'sine', 0.4); // Completion chime
     
   } catch (err) {
+    clearInterval(statusInterval);
     if (err.name === 'AbortError') {
       contentDiv.innerHTML += '<br/><em>[Stopped by user]</em>';
-      Kundalini.set(0);
     } else {
       contentDiv.innerHTML = `<div class="status-text" style="color:#E5383B">Error: ${err.message}</div>`;
       showToast(err.message, 'error');
-      Kundalini.set(0);
     }
   }
   
   isGenerating = false;
+  document.body.classList.remove('is-generating');
   if (composerBox) composerBox.classList.remove('generating');
   if (sendBtn) sendBtn.disabled = !messageInput.value.trim();
   abortController = null;
@@ -526,19 +501,48 @@ async function handleSendMessage() {
 function stopGeneration() {
   if (abortController) abortController.abort();
   isGenerating = false;
+  document.body.classList.remove('is-generating');
   const composerBox = document.getElementById('composerBox');
   if (composerBox) composerBox.classList.remove('generating');
 }
 
-function appendMessageUI(role, text) {
+function appendMessageUI(role, text, generating = false) {
   const row = document.createElement('div');
   row.className = `message-row ${role}`;
+  
+  let avatarHTML = '';
+  if (role === 'user') {
+    avatarHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+  } else if (generating) {
+    avatarHTML = `
+      <div class="quantum-avatar">
+        <div class="reactor-ring-outer"></div>
+        <div class="reactor-ring-inner"></div>
+        <div class="reactor-core"></div>
+      </div>
+    `;
+  } else {
+    avatarHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg>';
+  }
+  
+  let contentHTML = '';
+  if (role === 'user') {
+    contentHTML = text;
+  } else if (generating) {
+    contentHTML = `
+      <div class="cyber-status-pill">
+        <span class="live-beacon"></span>
+        <span class="status-phrase">⚡ TUNING NEURAL FREQUENCY</span>
+      </div>
+    `;
+  } else {
+    contentHTML = window.marked ? marked.parse(text) : text;
+  }
+
   row.innerHTML = `
-    <div class="message-avatar">
-      ${role === 'user' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>' : '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg>'}
-    </div>
+    <div class="message-avatar">${avatarHTML}</div>
     <div style="flex:1; display:flex; flex-direction:column; ${role === 'user' ? 'align-items:flex-end;' : ''}">
-      <div class="message-content">${role === 'user' ? text : '<div class="status-text">Thinking<span class="caret"></span></div>'}</div>
+      <div class="message-content">${contentHTML}</div>
       ${role === 'model' ? `
         <div class="msg-tools">
           <button class="icon-btn copy-btn" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
@@ -908,15 +912,6 @@ if (cmdPal) {
   });
 }
 
-// Panel Toggles
-const coreToggle = document.getElementById('coreToggle');
-if (coreToggle) {
-  coreToggle.addEventListener('click', () => {
-    const cp = document.getElementById('corePanel');
-    if (cp) cp.classList.toggle('collapsed');
-  });
-}
-
 const sidebarToggle = document.getElementById('sidebarToggle');
 if (sidebarToggle) {
   sidebarToggle.addEventListener('click', () => {
@@ -935,6 +930,5 @@ if (closeSidebarMobile) {
 
 // --- BOOTSTRAP ---
 window.addEventListener('DOMContentLoaded', () => {
-  Kundalini.init();
   runIntro();
 });
