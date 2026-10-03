@@ -84,11 +84,11 @@ input, textarea, select { font-family: inherit; }
 .hidden { display: none !important; }
 
 /* ===== AMBIENT CANVAS & BACKGROUND ===== */
-.ambient-canvas { position: fixed; inset: 0; z-index: -3; pointer-events: none; }
-.ambient-canvas.fg { z-index: 9999; opacity: 0.8; mix-blend-mode: screen; }
+.ambient-canvas { position: fixed; inset: 0; z-index: -3; pointer-events: none !important; }
+.ambient-canvas.fg { z-index: 9999; opacity: 0.8; mix-blend-mode: screen; pointer-events: none !important; }
 
 .bg-layer {
-  position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  position: fixed; inset: 0; z-index: -2; pointer-events: none !important;
   background-size: cover; background-position: center; opacity: 0; 
   transition: opacity var(--t-slow);
 }
@@ -99,7 +99,7 @@ body.bg-mandala .mandala-bg {
 }
 [data-theme="prakash"] body.bg-mandala .mandala-bg { filter: invert(1); opacity: 0.05; }
 .accent-glow-bg {
-  position: fixed; inset: -50%; z-index: -1; pointer-events: none;
+  position: fixed; inset: -50%; z-index: -1; pointer-events: none !important;
   background: radial-gradient(circle at center, var(--accent) 0%, transparent 50%);
   opacity: 0.1; filter: blur(100px);
   transition: --accent var(--t-slow) var(--ease-out);
@@ -110,6 +110,10 @@ body.bg-mandala .mandala-bg {
   position: fixed; inset: 0; z-index: 5000; background: var(--bg-void);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   perspective: 1000px;
+}
+.intro-overlay.hidden {
+  display: none !important;
+  pointer-events: none !important;
 }
 .intro-watermark {
   position: absolute; font-family: var(--font-body); font-size: 40vw; font-weight: 700;
