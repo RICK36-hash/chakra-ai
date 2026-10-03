@@ -373,7 +373,7 @@ async function handleSendMessage() {
   } catch (error) {
     removeTypingIndicator();
 
-    // Show error in chat
+    // Show error in chat with Retry button
     const errorRow = document.createElement("div");
     errorRow.className = "message-row bot";
 
@@ -383,8 +383,23 @@ async function handleSendMessage() {
 
     const content = document.createElement("div");
     content.className = "message-content error-message";
-    content.textContent = error.message || "Failed to get response. Please try again.";
 
+    const errorText = document.createElement("span");
+    errorText.textContent = error.message || "Failed to get response. Please try again.";
+
+    const retryBtn = document.createElement("button");
+    retryBtn.textContent = "🔄 Retry";
+    retryBtn.style.cssText = "margin-left:10px;padding:4px 12px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem;font-family:inherit;";
+    retryBtn.onclick = () => {
+      errorRow.remove();
+      // Re-add the user message to history and retry
+      conv.messages.push({ role: "user", parts: [{ text }] });
+      messageInput.value = "";
+      retrySendMessage(text, conv);
+    };
+
+    content.appendChild(errorText);
+    content.appendChild(retryBtn);
     errorRow.appendChild(avatar);
     errorRow.appendChild(content);
     chatMessages.appendChild(errorRow);
@@ -397,6 +412,54 @@ async function handleSendMessage() {
   saveConversations();
   scrollToBottom();
   messageInput.focus();
+}
+
+// ===== Retry Send Message =====
+async function retrySendMessage(text, conv) {
+  showTypingIndicator();
+
+  try {
+    const historyForAPI = conv.messages.slice(0, -1);
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: text,
+        history: historyForAPI,
+      }),
+    });
+
+    const data = await response.json();
+    removeTypingIndicator();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Something went wrong");
+    }
+
+    const botMessage = { role: "model", parts: [{ text: data.reply }] };
+    conv.messages.push(botMessage);
+    appendMessageToDOM("bot", data.reply);
+  } catch (error) {
+    removeTypingIndicator();
+    // Remove the user message we re-added
+    conv.messages.pop();
+
+    const errorRow = document.createElement("div");
+    errorRow.className = "message-row bot";
+    const avatar = document.createElement("div");
+    avatar.className = "message-avatar";
+    avatar.textContent = "⚠️";
+    const content = document.createElement("div");
+    content.className = "message-content error-message";
+    content.textContent = error.message || "Still failing. Please try again later.";
+    errorRow.appendChild(avatar);
+    errorRow.appendChild(content);
+    chatMessages.appendChild(errorRow);
+  }
+
+  saveConversations();
+  scrollToBottom();
 }
 
 // ===== Utilities =====

@@ -4,7 +4,6 @@
   "description": "Gemini-powered AI chatbot with conversation memory",
   "private": true,
   "scripts": {
-    "dev": "npx vercel dev",
     "deploy": "npx vercel --prod"
   },
   "dependencies": {
