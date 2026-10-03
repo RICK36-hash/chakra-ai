@@ -173,41 +173,30 @@ const CanvasSys = {
       });
     }
 
-    // Diya sparks & Warp Speed Streaks
-    const maxSparks = window.innerWidth > 768 ? (isGenerating ? 100 : 60) : 30;
-    if (Math.random() < (isGenerating ? 0.4 : 0.12) && this.sparks.length < maxSparks && settings.anim !== 'shanti') {
+    // Soft Diya Sparks
+    const maxSparks = window.innerWidth > 768 ? 50 : 25;
+    if (Math.random() < 0.15 && this.sparks.length < maxSparks && settings.anim !== 'shanti') {
       this.sparks.push({
         x: Math.random() * this.fg.width,
-        y: this.fg.height + 15,
-        r: Math.random() * 2 + 0.6,
-        speed: Math.random() * 0.8 + 0.5,
+        y: this.fg.height + 10,
+        r: Math.random() * 2 + 0.8,
+        speed: Math.random() * 0.7 + 0.3,
         wobble: Math.random() * Math.PI * 2,
-        alpha: Math.random() * 0.5 + 0.5
+        alpha: Math.random() * 0.4 + 0.4
       });
     }
     for (let i = this.sparks.length - 1; i >= 0; i--) {
       let s = this.sparks[i];
-      const speedMult = isGenerating ? 7 : 1;
-      s.y -= s.speed * speedMult;
-      s.x += Math.sin(s.wobble) * (isGenerating ? 0.8 : 0.4);
-      s.wobble += 0.03;
-      s.alpha -= (isGenerating ? 0.008 : 0.002);
-      if (s.alpha <= 0 || s.y < -20) { this.sparks.splice(i, 1); continue; }
+      s.y -= s.speed;
+      s.x += Math.sin(s.wobble) * 0.5;
+      s.wobble += 0.02;
+      s.alpha -= 0.002;
+      if (s.alpha <= 0 || s.y < -10) { this.sparks.splice(i, 1); continue; }
       
-      if (isGenerating) {
-        // Hyperspace neon laser streak
-        this.ctxFg.strokeStyle = `rgba(160, 107, 255, ${s.alpha * 0.85})`;
-        this.ctxFg.lineWidth = s.r * 1.4;
-        this.ctxFg.beginPath();
-        this.ctxFg.moveTo(s.x, s.y);
-        this.ctxFg.lineTo(s.x, s.y + s.speed * 20);
-        this.ctxFg.stroke();
-      } else {
-        this.ctxFg.fillStyle = `rgba(245, 194, 107, ${s.alpha})`;
-        this.ctxFg.beginPath();
-        this.ctxFg.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        this.ctxFg.fill();
-      }
+      this.ctxFg.fillStyle = `rgba(245, 194, 107, ${s.alpha})`;
+      this.ctxFg.beginPath();
+      this.ctxFg.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      this.ctxFg.fill();
     }
 
     // Cursor Aura
@@ -469,10 +458,10 @@ async function handleSendMessage() {
     contentDiv.innerHTML = window.marked ? marked.parse(data.reply) : data.reply;
     if (window.hljs) hljs.highlightAll();
     
-    // Restore steady serene Chakra avatar
+    // Stop spinning avatar
     if (avatarDiv) {
-      avatarDiv.innerHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg>';
-      safeGsap.from(avatarDiv, { scale: 1.3, duration: 0.5, ease: "elastic.out(1, 0.4)" });
+      const svg = avatarDiv.querySelector('svg');
+      if (svg) svg.classList.remove('slow-spin');
     }
     
     chat.history.push({ role: 'model', parts: [{ text: data.reply }] });
@@ -513,16 +502,8 @@ function appendMessageUI(role, text, generating = false) {
   let avatarHTML = '';
   if (role === 'user') {
     avatarHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
-  } else if (generating) {
-    avatarHTML = `
-      <div class="quantum-avatar">
-        <div class="reactor-ring-outer"></div>
-        <div class="reactor-ring-inner"></div>
-        <div class="reactor-core"></div>
-      </div>
-    `;
   } else {
-    avatarHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="6"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg>';
+    avatarHTML = `<svg class="${generating ? 'slow-spin' : ''}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="5"/><path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="currentColor" stroke-width="3"/><circle cx="50" cy="50" r="7" fill="currentColor"/></svg>`;
   }
   
   let contentHTML = '';
